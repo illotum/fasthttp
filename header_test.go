@@ -135,27 +135,36 @@ func TestRequestRawHeaders(t *testing.T) {
 			t.Fatalf("expected header %q, got %q", exp, raw)
 		}
 	})
-	t.Run("post", func(t *testing.T) {
-		s := "POST / HTTP/1.1\r\n" + kvs + "body"
-		exp := "Host: foobar\r\n" +
-			"Value: b\r\n" +
-			"\r\n"
-		var h RequestHeader
-		br := bufio.NewReader(bytes.NewBufferString(s))
-		if err := h.Read(br); err != nil {
-			t.Fatalf("unexpected error: %s", err)
-		}
-		if string(h.Host()) != "foobar" {
-			t.Fatalf("unexpected host: %q. Expecting %q", h.Host(), "foobar")
-		}
-		v2 := h.Peek("Value")
-		if !bytes.Equal(v2, []byte{'b'}) {
-			t.Fatalf("expecting non empty value. Got %q", v2)
-		}
-		if raw := h.RawHeaders(); string(raw) != exp {
-			t.Fatalf("expected header %q, got %q", exp, raw)
-		}
-	})
+	for _, n := range []int{0, 1, 4, 8} {
+		t.Run(fmt.Sprintf("post-%dk", n), func(t *testing.T) {
+			l := 1024 * n
+			body := make([]byte, l)
+			for i := range body {
+				body[i] = 'a'
+			}
+			cl := fmt.Sprintf("Content-Length: %d\r\n", l)
+			s := "POST / HTTP/1.1\r\n" + cl + kvs + string(body)
+			exp := cl +
+				"Host: foobar\r\n" +
+				"Value: b\r\n" +
+				"\r\n"
+			var h RequestHeader
+			br := bufio.NewReader(bytes.NewBufferString(s))
+			if err := h.Read(br); err != nil {
+				t.Fatalf("unexpected error: %s", err)
+			}
+			if string(h.Host()) != "foobar" {
+				t.Fatalf("unexpected host: %q. Expecting %q", h.Host(), "foobar")
+			}
+			v2 := h.Peek("Value")
+			if !bytes.Equal(v2, []byte{'b'}) {
+				t.Fatalf("expecting non empty value. Got %q", v2)
+			}
+			if raw := h.RawHeaders(); string(raw) != exp {
+				t.Fatalf("expected header %q, got %q", exp, raw)
+			}
+		})
+	}
 	t.Run("http10", func(t *testing.T) {
 		s := "GET / HTTP/1.0\r\n" + kvs
 		exp := "Host: foobar\r\n" +
