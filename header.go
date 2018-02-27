@@ -1620,7 +1620,7 @@ func (h *RequestHeader) parse(buf []byte) (int, error) {
 		if err != nil {
 			return 0, err
 		}
-		h.rawHeaders = buf[m : m+n]
+		h.rawHeaders = append(h.rawHeaders[:0], buf[m:m+n]...)
 		h.rawHeadersParsed = true
 	} else {
 		var rawHeaders []byte
