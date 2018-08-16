@@ -1417,7 +1417,7 @@ func (s *Server) Serve(ln net.Listener) error {
 // When Shutdown is called, Serve, ListenAndServe, and ListenAndServeTLS immediately return nil.
 // Make sure the program doesn't exit and waits instead for Shutdown to return.
 //
-// Shutdown does not close keepalive connections so its recommended to set MaxKeepaliveDuration to something else than 0.
+// Shutdown does not close keepalive connections so its recommended to set ReadTimeout to something else than 0.
 func (s *Server) Shutdown() error {
 	if s.ln != nil {
 		if err := s.ln.Close(); err != nil {
